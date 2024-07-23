@@ -37,24 +37,24 @@ Context* init_context(void(*backward)(Context*, float), Value** saved_values, in
     return ctx;
 }
 
-void build_topo(Value* value, Value** visited, int visited_count, Value** nodes, int nodes_count) {
+void build_topo(Value* value, Value** visited, int* visited_count, Value** nodes, int* nodes_count) {
     bool found = false;
-    for (int i = 0; i < visited_count; i++) {
+    for (int i = 0; i < *visited_count; i++) {
         if (visited[i] == value) {
             found = true;
             break;
         }
     }
     if (!found) {
-        visited[visited_count] = value;
-        (visited_count)++;
+        visited[*visited_count] = value;
+        (*visited_count)++;
         if (value->_ctx) {
             for (int i = 0; i < value->_ctx->saved_value_count; i++) {
                 build_topo(value->_ctx->saved_values[i], visited, visited_count, nodes, nodes_count);
             }
         }
-        nodes[nodes_count] = value;
-        (nodes_count)++;
+        nodes[*nodes_count] = value;
+        (*nodes_count)++;
     }
 }
 
@@ -66,7 +66,7 @@ void backward(Value* value) {
     int visited_count = 0;
     Value* nodes[1000];
     int nodes_count = 0;
-    build_topo(value, visited, visited_count, nodes, nodes_count);
+    build_topo(value, visited, &visited_count, nodes, &nodes_count);
 
     for (int i = nodes_count - 1; i >= 0; i--) {
         Value* t = nodes[i];
