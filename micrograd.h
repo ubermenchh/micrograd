@@ -41,3 +41,15 @@ void div_backward(Context* ctx, float grad);
 
 Value* pow_value(Value* in, Value* power);
 void pow_backward(Context* ctx, float grad);
+
+Value* relu_value(Value* in);
+void relu_backward(Context* ctx, float grad);
+
+Value* tanh_value(Value* in);
+void tanh_backward(Context* ctx, float grad);
+
+Value* exp_value(Value* in);
+void exp_backward(Context* ctx, float grad);
+
+Value* log_value(Value* in);
+void log_backward(Context* ctx, float grad);

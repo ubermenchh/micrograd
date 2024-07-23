@@ -134,12 +134,112 @@ void mul_backward(Context* ctx, float grad) {
     b->grad += a->data * grad;
 }
 
+Value* div_value(Value* a, Value* b) {
+    Value* out = init_value(0.0);
+    out->data = a->data / b->data;
+
+    Value* saved_values[2] = {a, b};
+    out->_ctx = init_context(div_backward, saved_values, 2);
+
+    return out;
+}
+
+void div_backward(Context* ctx, float grad) {
+    Value* a = ctx->saved_values[0];
+    Value* b = ctx->saved_values[1];
+
+    a->grad += grad / b->data;
+    b->grad += (grad * a->data) / (b->data*b->data);
+}
+
+Value* pow_value(Value* in, Value* power) {
+    Value* out = init_value(0.0);
+    out->data = pow(in->data, power->data);
+
+    Value* saved_values[2] = {in, power};
+    out->_ctx = init_context(pow_backward, saved_values, 2);
+
+    return out;
+}
+
+void pow_backward(Context* ctx, float grad) {
+    Value* in = ctx->saved_values[0];
+    Value* power = ctx->saved_values[1];
+
+    in->grad += (power->data * pow(in->data, power->data - 1)) * grad;
+}
+
+Value* relu_value(Value* in) {
+    Value* out = init_value(0.0);
+    if (in->data < 0) 
+        out->data = 0;
+    else 
+        out->data = in->data;
+
+    Value* saved_values[2] = {in, out};
+    out->_ctx = init_context(relu_backward, saved_values, 2);
+    return out;
+}
+
+void relu_backward(Context* ctx, float grad) {
+    Value* in = ctx->saved_values[0];
+    Value* out = ctx->saved_values[1];
+
+    in->grad += (out->data > 0) * grad;
+}
+
+Value* tanh_value(Value* in) {
+    Value* out = init_value(0.0);
+    out->data = tanh(in->data);
+
+    Value* saved_values[2] = {in, out};
+    out->_ctx = init_context(tanh_backward, saved_values, 2);
+    return out;
+}
+
+void tanh_backward(Context* ctx, float grad) {
+    Value* in = ctx->saved_values[0];
+    Value* out = ctx->saved_values[1];
+
+    in->grad += (1 - (out->data*out->data)) * grad;
+}
+
+Value* exp_value(Value* in) {
+    Value* out = init_value(0.0);
+    out->data = exp(in->data);
+
+    Value* saved_values[1] = {in};
+    out->_ctx = init_context(exp_backward, saved_values, 1);
+    return out;
+}
+
+void exp_backward(Context* ctx, float grad) {
+    Value* in = ctx->saved_values[0];
+
+    in->grad += exp(in->data) * grad;
+}
+
+Value* log_value(Value* in) {
+    Value* out = init_value(0.0);
+    out->data = log(in->data);
+
+    Value* saved_values[1] = {in};
+    out->_ctx = init_context(log_backward, saved_values, 1);
+    return out;
+}
+
+void log_backward(Context* ctx, float grad) {
+    Value* in = ctx->saved_values[0];
+
+    in->grad += (1 / in->data) * grad;
+}
 
 int main(void) {
     Value* a = init_value(10.0);
     Value* b = init_value(3.0);
 
-    Value* out = mul_value(a, b);
+    Value* out = log_value(a);
+    out = mul_value(out, b);
     backward(out);
     print_value(out);
     print_value(a); print_value(b);
