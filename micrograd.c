@@ -248,8 +248,9 @@ Neuron* init_neuron(int nin, bool nonlin) {
     neuron->nin = nin;
     neuron->nonlin = nonlin;
     neuron->forward = neuron_forward;
+    neuron->print = print_neuron;
 
-    neuron->w = (Value**)malloc(nin * sizeof(Value));
+    neuron->w = (Value**)malloc(nin * sizeof(Value*));
     if (neuron->w == NULL) {
         free(neuron);
         return NULL;
@@ -302,13 +303,21 @@ Value* neuron_forward(Neuron* neuron, Value** x) {
 
 Value** neuron_parameters(Module* module) {
     Neuron* neuron = (Neuron*)module->impl;
-    Value** params = malloc((neuron->nin + 1) * sizeof(Value)); // +1 for bias
+    Value** params = malloc((neuron->nin + 1) * sizeof(Value*)); // +1 for bias
     
     for (int i = 0; i < neuron->nin; i++) {
         params[i] = neuron->w[i];
     }
     params[neuron->nin] = neuron->b;
     return params;
+}
+
+void print_neuron(Neuron* neuron) {
+    if (neuron->nonlin) {
+        printf("Tanh_Neuron(%d)\n", neuron->nin);
+    } else {
+        printf("Linear_Neuron(%d)\n", neuron->nin);
+    }
 }
 
 Layer* init_layer(int nin, int nout, bool nonlin) {
@@ -321,6 +330,7 @@ Layer* init_layer(int nin, int nout, bool nonlin) {
     layer->nin = nin;
     layer->nout = nout;
     layer->forward = layer_forward;
+    layer->print = print_layer;
 
     layer->neurons = (Neuron**)malloc(nout * sizeof(Neuron*));
     if (layer->neurons == NULL) {
@@ -389,6 +399,15 @@ Value** layer_parameters(Module* module) {
     return params;
 }
 
+void print_layer(Layer* layer) {
+    printf("Layer of [\n");
+    for (int i = 0; i < layer->nout; i++) {
+        printf("\t\t");
+        print_neuron(layer->neurons[i]);
+    }
+    printf("\t]\n");
+}
+
 MLP* init_mlp(int nin, int nouts, bool nonlin) {
     MLP* mlp = (MLP*)malloc(sizeof(MLP));
     if (mlp == NULL) return NULL;
@@ -398,6 +417,7 @@ MLP* init_mlp(int nin, int nouts, bool nonlin) {
     mlp->base.free = free_mlp;
 
     mlp->forward = mlp_forward;
+    mlp->print = print_mlp;
     mlp->nin = nin;
     mlp->nouts = nouts;
     
@@ -477,15 +497,26 @@ Value** mlp_parameters(Module* module) {
     return params;
 }
 
+void print_mlp(MLP* mlp) {
+    printf("MLP of {\n");
+    for (int i = 0; i < mlp->nouts; i++) {
+        printf("\t");
+        print_layer(mlp->layers[i]);
+    }
+    printf("}\n");
+}
+
 int main(void) {
     Value* a = init_value(10.0);
     Value* b = init_value(3.0);
-    Neuron* n = init_neuron(1, false);
+    MLP* mlp = init_mlp(10, 10, false);
+    print_mlp(mlp);
 
-    Value* out = neuron_forward(n, &a);
+    /*Value* out = neuron_forward(n, &a);
     backward(out);
     print_value(out);
     print_value(a); print_value(b);
+    */
 
-    free_value(a); free_value(b); free_value(out);
+    free_value(a); free_value(b); //free_value(out);
 }

@@ -74,6 +74,7 @@ struct Neuron {
     Value** w;
     Value* b;
     Value* (*forward)(Neuron* self, Value** input);
+    void (*print)(Neuron* self);
 };
 
 struct Layer {
@@ -83,6 +84,7 @@ struct Layer {
 
     Neuron** neurons;
     Value** (*forward)(Layer* self, Value** input);
+    void (*print)(Layer* self);
 }; 
 
 struct MLP {
@@ -92,20 +94,23 @@ struct MLP {
 
     Layer** layers; 
     Value** (*forward)(MLP* self, Value** input);
+    void (*print)(MLP* self);
 };
 
 Neuron* init_neuron(int nin, bool nonlin);
-Value* neuron_forward(Neuron* Neuron, Value** x);
+Value* neuron_forward(Neuron* neuron, Value** x);
 Value** neuron_parameters(Module* module);
 void free_neuron(Module* module);
+void print_neuron(Neuron* neuron);
 
 Layer* init_layer(int nin, int nouts, bool nonlin);
 Value** layer_forward(Layer* layer, Value** x);
 Value** layer_parameters(Module* module);
 void free_layer(Module* module);
+void print_layer(Layer* layer);
 
 MLP* init_mlp(int nin, int nouts, bool nonlin);
 Value** mlp_forward(MLP* mlp, Value** x);
 Value** mlp_parameters(Module* module);
 void free_mlp(Module* module);
-
+void print_mlp(MLP* mlp);
